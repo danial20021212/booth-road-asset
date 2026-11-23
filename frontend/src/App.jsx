@@ -8,6 +8,7 @@ import Stage from "./components/Stage";
 import ClassChips from "./components/ClassChips";
 import DetectionList from "./components/DetectionList";
 import Spotlight from "./components/Spotlight";
+import ChallengeModal from "./components/ChallengeModal";
 
 // phase: "select" -> "ready" -> "scanning" -> "result"
 const App = () => {
@@ -19,6 +20,7 @@ const App = () => {
   const [activeGroups, setActiveGroups] = useState(new Set());
   const [selected, setSelected] = useState(null); // detection number (n) or null
   const [error, setError] = useState("");
+  const [challengeOpen, setChallengeOpen] = useState(false);
   const runId = useRef(0); // lets us ignore a detection that finishes after a reset
 
   const clearResults = () => {
@@ -38,6 +40,7 @@ const App = () => {
     setActiveGroups(new Set());
     setSelected(null);
     setError("");
+    setChallengeOpen(false);
   }, []);
 
   useIdleReset(phase !== "select", IDLE_RESET_MS, reset);
@@ -133,14 +136,25 @@ const App = () => {
                     pillars, bus stops and more.
                   </p>
                   {error && <p className="text-xl text-red-400">{error}</p>}
-                  <div className="relative mt-auto">
-                    <span className="absolute inset-0 animate-ping rounded-2xl bg-cyan-400/40" />
+                  <div className="mt-auto flex flex-col gap-4">
                     <button
-                      onClick={runDetection}
-                      className="relative w-full rounded-2xl bg-cyan-400 py-6 text-4xl font-bold text-slate-950 transition active:scale-95"
+                      onClick={() => setChallengeOpen(true)}
+                      className="rounded-2xl border-2 border-amber-400 bg-amber-400/10 py-4 text-3xl font-bold text-amber-300 transition hover:bg-amber-400/20 active:scale-95"
                     >
-                      Detect assets
+                      Can you beat the AI?
+                      <span className="block text-lg font-normal text-amber-200/80">
+                        Draw your own boxes, then compare
+                      </span>
                     </button>
+                    <div className="relative overflow-hidden rounded-2xl">
+                      <span className="absolute inset-0 animate-ping rounded-2xl bg-cyan-400/40" />
+                      <button
+                        onClick={runDetection}
+                        className="relative w-full rounded-2xl bg-cyan-400 py-6 text-4xl font-bold text-slate-950 transition active:scale-95"
+                      >
+                        Detect assets
+                      </button>
+                    </div>
                   </div>
                 </>
               )}
@@ -189,6 +203,10 @@ const App = () => {
           </div>
         )}
       </main>
+
+      {challengeOpen && image && (
+        <ChallengeModal image={image} ratio={ratio} onClose={() => setChallengeOpen(false)} />
+      )}
     </div>
   );
 };
