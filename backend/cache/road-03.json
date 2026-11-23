@@ -1,0 +1,145 @@
+[
+  {
+    "label": "traffic sign",
+    "box_2d": [
+      208,
+      472,
+      239,
+      490
+    ],
+    "shape": "diamond",
+    "main_color": "orange",
+    "category": "construction_temporary",
+    "confidence": 0.9
+  },
+  {
+    "label": "traffic sign",
+    "box_2d": [
+      241,
+      471,
+      272,
+      489
+    ],
+    "shape": "diamond",
+    "main_color": "yellow",
+    "category": "warning",
+    "confidence": 0.93
+  },
+  {
+    "label": "traffic sign",
+    "box_2d": [
+      244,
+      331,
+      265,
+      340
+    ],
+    "shape": "rectangle",
+    "main_color": "yellow",
+    "category": "warning",
+    "confidence": 0.85
+  },
+  {
+    "label": "traffic sign",
+    "box_2d": [
+      246,
+      325,
+      266,
+      331
+    ],
+    "shape": "rectangle",
+    "main_color": "yellow",
+    "category": "warning",
+    "confidence": 0.8
+  },
+  {
+    "label": "traffic sign",
+    "box_2d": [
+      247,
+      320,
+      266,
+      326
+    ],
+    "shape": "rectangle",
+    "main_color": "yellow",
+    "category": "warning",
+    "confidence": 0.8
+  },
+  {
+    "label": "traffic sign",
+    "box_2d": [
+      248,
+      315,
+      266,
+      320
+    ],
+    "shape": "rectangle",
+    "main_color": "yellow",
+    "category": "warning",
+    "confidence": 0.78
+  },
+  {
+    "label": "traffic sign",
+    "box_2d": [
+      249,
+      309,
+      267,
+      315
+    ],
+    "shape": "rectangle",
+    "main_color": "yellow",
+    "category": "warning",
+    "confidence": 0.75
+  },
+  {
+    "label": "traffic sign",
+    "box_2d": [
+      250,
+      305,
+      268,
+      310
+    ],
+    "shape": "rectangle",
+    "main_color": "yellow",
+    "category": "warning",
+    "confidence": 0.75
+  },
+  {
+    "label": "traffic sign",
+    "box_2d": [
+      278,
+      785,
+      358,
+      818
+    ],
+    "shape": "rectangle",
+    "main_color": "yellow",
+    "category": "warning",
+    "confidence": 0.98
+  },
+  {
+    "label": "traffic sign",
+    "box_2d": [
+      373,
+      944,
+      543,
+      998
+    ],
+    "shape": "rectangle",
+    "main_color": "yellow",
+    "category": "warning",
+    "confidence": 0.98
+  },
+  {
+    "label": "traffic island",
+    "box_2d": [
+      272,
+      417,
+      324,
+      463
+    ],
+    "shape": null,
+    "main_color": null,
+    "category": null,
+    "confidence": 0.85
+  }
+]

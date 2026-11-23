@@ -1,0 +1,93 @@
+[
+  {
+    "label": "traffic sign",
+    "box_2d": [
+      271,
+      258,
+      314,
+      293
+    ],
+    "shape": "rectangle",
+    "main_color": "blue",
+    "category": "informative",
+    "confidence": 0.96
+  },
+  {
+    "label": "traffic sign",
+    "box_2d": [
+      244,
+      333,
+      286,
+      353
+    ],
+    "shape": "rectangle",
+    "main_color": "yellow",
+    "category": "warning",
+    "confidence": 0.96
+  },
+  {
+    "label": "traffic sign",
+    "box_2d": [
+      239,
+      424,
+      274,
+      439
+    ],
+    "shape": "rectangle",
+    "main_color": "yellow",
+    "category": "warning",
+    "confidence": 0.95
+  },
+  {
+    "label": "traffic sign",
+    "box_2d": [
+      235,
+      498,
+      265,
+      512
+    ],
+    "shape": "rectangle",
+    "main_color": "yellow",
+    "category": "warning",
+    "confidence": 0.94
+  },
+  {
+    "label": "traffic sign",
+    "box_2d": [
+      239,
+      706,
+      259,
+      717
+    ],
+    "shape": "diamond",
+    "main_color": "yellow",
+    "category": "warning",
+    "confidence": 0.91
+  },
+  {
+    "label": "traffic sign",
+    "box_2d": [
+      259,
+      706,
+      275,
+      716
+    ],
+    "shape": "diamond",
+    "main_color": "yellow",
+    "category": "warning",
+    "confidence": 0.89
+  },
+  {
+    "label": "traffic sign",
+    "box_2d": [
+      266,
+      697,
+      278,
+      706
+    ],
+    "shape": "rectangle",
+    "main_color": "blue",
+    "category": "informative",
+    "confidence": 0.72
+  }
+]

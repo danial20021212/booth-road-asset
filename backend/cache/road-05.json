@@ -1,0 +1,93 @@
+[
+  {
+    "label": "bus stop",
+    "box_2d": [
+      298,
+      193,
+      520,
+      323
+    ],
+    "shape": null,
+    "main_color": null,
+    "category": null,
+    "confidence": 0.96
+  },
+  {
+    "label": "traffic sign",
+    "box_2d": [
+      314,
+      340,
+      336,
+      347
+    ],
+    "shape": "circle",
+    "main_color": "red",
+    "category": "regulatory_prohibitive",
+    "confidence": 0.78
+  },
+  {
+    "label": "traffic sign",
+    "box_2d": [
+      311,
+      424,
+      326,
+      434
+    ],
+    "shape": "rectangle",
+    "main_color": "blue",
+    "category": "informative",
+    "confidence": 0.74
+  },
+  {
+    "label": "straight arrow road marking",
+    "box_2d": [
+      408,
+      549,
+      441,
+      572
+    ],
+    "shape": null,
+    "main_color": null,
+    "category": null,
+    "confidence": 0.91
+  },
+  {
+    "label": "right and straight arrow road marking",
+    "box_2d": [
+      411,
+      595,
+      441,
+      634
+    ],
+    "shape": null,
+    "main_color": null,
+    "category": null,
+    "confidence": 0.89
+  },
+  {
+    "label": "right turn arrow road marking",
+    "box_2d": [
+      411,
+      661,
+      431,
+      691
+    ],
+    "shape": null,
+    "main_color": null,
+    "category": null,
+    "confidence": 0.87
+  },
+  {
+    "label": "traffic island",
+    "box_2d": [
+      417,
+      224,
+      1000,
+      428
+    ],
+    "shape": null,
+    "main_color": null,
+    "category": null,
+    "confidence": 0.92
+  }
+]

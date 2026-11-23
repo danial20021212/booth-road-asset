@@ -1,7 +1,7 @@
 import { MIN_SCAN_MS, describe, groupRank } from "./constants";
 
 // Flip to false once the Express server is running.
-const USE_MOCK = true;
+const USE_MOCK = false;
 const API_BASE = "http://localhost:8000";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

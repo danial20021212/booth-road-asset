@@ -1,0 +1,15 @@
+[
+  {
+    "label": "traffic sign",
+    "box_2d": [
+      146,
+      197,
+      241,
+      240
+    ],
+    "shape": "diamond",
+    "main_color": "yellow",
+    "category": "warning",
+    "confidence": 1
+  }
+]
