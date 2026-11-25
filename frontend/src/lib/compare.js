@@ -24,7 +24,7 @@ export const categoryOf = (group) => ALL_CATEGORIES.find((c) => c.group === grou
 // How each result is shown. Order here is the order of the result list.
 export const STATUS = {
   match: { label: "You both found it", color: "#22c55e" },
-  wrong: { label: "Found it, different type", color: "#f59e0b" },
+  wrong: { label: "Error", color: "#f59e0b" },
   missed: { label: "You missed it", color: "#f43f5e" },
   extra: { label: "The AI missed it", color: "#38bdf8" },
 };
@@ -90,7 +90,7 @@ export function itemInfo(it) {
     case "match":
       return { name: aiName, sub: "Right place, right type" };
     case "wrong":
-      return { name: aiName, sub: `AI says ${aiName.toLowerCase()}, you said ${meName.toLowerCase()}` };
+      return { name: aiName, sub: `AI: ${aiName} · You: ${meName}` };
     case "missed":
       return { name: aiName, sub: "The AI spotted this one" };
     default:

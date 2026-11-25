@@ -303,17 +303,17 @@ const ChallengeModal = ({ image, ratio, kind = "assets", onClose }) => {
           {mode === "compare" && result && (
             <>
               <div>
-                <p className="text-xl text-slate-400">You spotted</p>
+                <p className="text-xl text-slate-400">You got right</p>
                 <p className="font-mono text-6xl font-bold text-amber-300">
-                  {result.counts.match + result.counts.wrong}
+                  {result.counts.match}
                   <span className="text-3xl text-slate-500"> / {ai.length}</span>
                 </p>
                 <p className="text-xl text-slate-300">
                   {ai.length === 0
                     ? "The AI found nothing in this frame"
                     : `of the objects the AI found${
-                        result.counts.extra ? `, plus ${result.counts.extra} the AI missed` : ""
-                      }`}
+                        result.counts.wrong ? `, ${result.counts.wrong} with the wrong type` : ""
+                      }${result.counts.extra ? `, plus ${result.counts.extra} the AI missed` : ""}`}
                 </p>
               </div>
 
