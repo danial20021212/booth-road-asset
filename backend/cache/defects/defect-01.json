@@ -1,0 +1,41 @@
+[
+  {
+    "label": "crocodile crack",
+    "box_2d": [
+      0,
+      41,
+      882,
+      879
+    ],
+    "shape": null,
+    "main_color": null,
+    "category": null,
+    "confidence": 1
+  },
+  {
+    "label": "crocodile crack",
+    "box_2d": [
+      39,
+      765,
+      329,
+      1000
+    ],
+    "shape": null,
+    "main_color": null,
+    "category": null,
+    "confidence": 1
+  },
+  {
+    "label": "crocodile crack",
+    "box_2d": [
+      862,
+      248,
+      1000,
+      853
+    ],
+    "shape": null,
+    "main_color": null,
+    "category": null,
+    "confidence": 1
+  }
+]

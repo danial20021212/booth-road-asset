@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { detect } from "../api";
-import { CATEGORIES, STATUS, categoryOf, compare, itemInfo } from "../lib/compare";
+import { STATUS, categoriesFor, categoryOf, compare, itemInfo } from "../lib/compare";
 
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
 const pct = (v) => `${v * 100}%`;
@@ -14,10 +14,12 @@ const boxStyle = (b) => ({
 // Smallest drag (as a fraction of the image) that counts as a box, so stray taps are ignored.
 const MIN_DRAG = 0.008;
 
-const ChallengeModal = ({ image, ratio, onClose }) => {
+// `kind` is "assets" or "defects": it decides which types the visitor can pick and which saved result is used.
+const ChallengeModal = ({ image, ratio, kind = "assets", onClose }) => {
+  const categories = useMemo(() => categoriesFor(kind), [kind]);
   const [mode, setMode] = useState("draw"); // "draw" -> "compare"
   const [mine, setMine] = useState([]); // [{ id, group, box }]
-  const [brush, setBrush] = useState(CATEGORIES[0].group);
+  const [brush, setBrush] = useState(categories[0].group);
   const [drawing, setDrawing] = useState(null); // { x0, y0, x1, y1 } while dragging
   const [ai, setAi] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -83,7 +85,7 @@ const ChallengeModal = ({ image, ratio, onClose }) => {
     }
     setBusy(true);
     try {
-      const detections = await detect(image.id); // saved result, with the scan delay
+      const detections = await detect(image.id, kind); // saved result, with the scan delay
       if (!alive.current) return;
       setAi(detections);
       setMode("compare");
@@ -243,7 +245,7 @@ const ChallengeModal = ({ image, ratio, onClose }) => {
               </div>
 
               <div className="grid min-h-0 flex-1 grid-cols-2 gap-2 overflow-y-auto pr-1">
-                {CATEGORIES.map((c) => {
+                {categories.map((c) => {
                   const on = brush === c.group;
                   return (
                     <button

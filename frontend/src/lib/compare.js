@@ -1,4 +1,4 @@
-import { describe, GROUP_ORDER } from "../constants";
+import { describe, GROUP_ORDER, MODES } from "../constants";
 
 // What a visitor can pick when drawing a box. Built from the same groups the AI results use,
 // so names and colours match. "Unclassified sign" is left out; visitors always choose a type.
@@ -8,12 +8,18 @@ const asDetection = (group) => {
   return { label: group };
 };
 
-export const CATEGORIES = GROUP_ORDER.filter((g) => g !== "sign:unknown").map((group) => {
+const ALL_CATEGORIES = GROUP_ORDER.filter((g) => g !== "sign:unknown").map((group) => {
   const info = describe(asDetection(group));
   return { group, name: info.name, color: info.color, hint: info.hint };
 });
 
-export const categoryOf = (group) => CATEGORIES.find((c) => c.group === group) || CATEGORIES[0];
+// The choices shown for one mode: "assets" or "defects".
+export const categoriesFor = (modeKey) => {
+  const groups = MODES[modeKey]?.groups || [];
+  return ALL_CATEGORIES.filter((c) => groups.includes(c.group));
+};
+
+export const categoryOf = (group) => ALL_CATEGORIES.find((c) => c.group === group) || ALL_CATEGORIES[0];
 
 // How each result is shown. Order here is the order of the result list.
 export const STATUS = {

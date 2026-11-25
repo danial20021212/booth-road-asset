@@ -9,7 +9,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 /*
   Contract with the Express server:
 
-  POST {API_BASE}/api/detect/:imageId
+  POST {API_BASE}/api/detect/:kind/:imageId      (kind is "assets" or "defects")
   -> the Gemini JSON exactly as your prompt returns it, either the bare list
      or wrapped as { "detections": [...] }:
 
@@ -101,7 +101,8 @@ function prepare(raw) {
     .map((d, i) => ({ ...d, n: i + 1 }));
 }
 
-export async function detect(imageId) {
+// kind: "assets" (road assets) or "defects" (road defects)
+export async function detect(imageId, kind = "assets") {
   const started = Date.now();
   let raw;
 
@@ -109,7 +110,7 @@ export async function detect(imageId) {
     await sleep(800);
     raw = mockRaw(imageId);
   } else {
-    const res = await fetch(`${API_BASE}/api/detect/${imageId}`, { method: "POST" });
+    const res = await fetch(`${API_BASE}/api/detect/${kind}/${imageId}`, { method: "POST" });
     if (!res.ok) throw new Error(`Detection failed (${res.status})`);
     raw = await res.json();
   }

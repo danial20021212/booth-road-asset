@@ -1,8 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { IMAGES } from "./data/images";
+import { DEFECT_IMAGES } from "./data/defectImages";
 import { detect } from "./api";
-import { describe, IDLE_RESET_MS, REVEAL_STEP_MS } from "./constants";
+import { describe, IDLE_RESET_MS, MODES, REVEAL_STEP_MS } from "./constants";
 import { useIdleReset } from "./hooks/useIdleReset";
+import ModeSelect from "./components/ModeSelect";
 import ImageGrid from "./components/ImageGrid";
 import Stage from "./components/Stage";
 import ClassChips from "./components/ClassChips";
@@ -10,8 +12,12 @@ import DetectionList from "./components/DetectionList";
 import Spotlight from "./components/Spotlight";
 import ChallengeModal from "./components/ChallengeModal";
 
+const FRAMES = { assets: IMAGES, defects: DEFECT_IMAGES };
+
+// kind: null (home) -> "assets" | "defects"
 // phase: "select" -> "ready" -> "scanning" -> "result"
 const App = () => {
+  const [kind, setKind] = useState(null);
   const [phase, setPhase] = useState("select");
   const [image, setImage] = useState(null);
   const [ratio, setRatio] = useState(16 / 9);
@@ -21,7 +27,9 @@ const App = () => {
   const [selected, setSelected] = useState(null); // detection number (n) or null
   const [error, setError] = useState("");
   const [challengeOpen, setChallengeOpen] = useState(false);
-  const runId = useRef(0); // lets us ignore a detection that finishes after a reset
+  const runId = useRef(0); // lets us ignore a detection that finishes after the visitor moved on
+
+  const cfg = kind ? MODES[kind] : null;
 
   const clearResults = () => {
     setDetections([]);
@@ -31,7 +39,8 @@ const App = () => {
     setError("");
   };
 
-  const reset = useCallback(() => {
+  // Back to the grid of frames (stays in the same mode).
+  const backToGrid = useCallback(() => {
     runId.current += 1;
     setPhase("select");
     setImage(null);
@@ -43,7 +52,18 @@ const App = () => {
     setChallengeOpen(false);
   }, []);
 
-  useIdleReset(phase !== "select", IDLE_RESET_MS, reset);
+  // Back to the two-button home screen. Also what the idle timer does.
+  const goHome = useCallback(() => {
+    backToGrid();
+    setKind(null);
+  }, [backToGrid]);
+
+  useIdleReset(kind !== null, IDLE_RESET_MS, goHome);
+
+  const chooseKind = (k) => {
+    backToGrid();
+    setKind(k);
+  };
 
   const pick = (img) => {
     runId.current += 1;
@@ -57,7 +77,7 @@ const App = () => {
     clearResults();
     setPhase("scanning");
     try {
-      const result = await detect(image.id);
+      const result = await detect(image.id, kind);
       if (myRun !== runId.current) return;
       setDetections(result);
       setActiveGroups(new Set(result.map((d) => describe(d).group)));
@@ -89,30 +109,36 @@ const App = () => {
     if (selectedDet && describe(selectedDet).group === group) setSelected(null);
   };
 
+  const onGrid = kind !== null && phase === "select";
+
   return (
     <div className="flex h-screen w-screen select-none flex-col overflow-hidden bg-slate-950 p-8 text-slate-100">
       {/* Header */}
       <header className="mb-6 flex items-end justify-between">
         <div>
-          <p className="font-mono text-lg uppercase tracking-[0.3em] text-cyan-400">AI Road Asset Detection</p>
+          <p className="font-mono text-lg uppercase tracking-[0.3em] text-cyan-400">
+            {cfg ? cfg.eyebrow : "AI Road Inspection"}
+          </p>
           <h1 className="text-5xl font-bold tracking-tight">
-            {phase === "select" ? "Pick a dashcam frame. Watch the AI find every road asset." : image.title}
+            {!cfg ? "What should the AI inspect?" : onGrid ? cfg.selectTitle : image.title}
           </h1>
         </div>
-        {phase !== "select" && (
+        {kind !== null && (
           <button
-            onClick={reset}
+            onClick={onGrid ? goHome : backToGrid}
             className="rounded-full border-2 border-slate-600 px-8 py-3 text-2xl font-medium text-slate-300 transition hover:border-cyan-400 hover:text-white active:scale-95"
           >
-            ← Choose another
+            {onGrid ? "← Home" : "← Choose another"}
           </button>
         )}
       </header>
 
       {/* Body */}
       <main className="min-h-0 flex-1">
-        {phase === "select" ? (
-          <ImageGrid images={IMAGES} onPick={pick} />
+        {kind === null ? (
+          <ModeSelect onPick={chooseKind} />
+        ) : onGrid ? (
+          <ImageGrid key={kind} images={FRAMES[kind]} onPick={pick} />
         ) : (
           <div className="flex h-full gap-8">
             <div className="min-h-0 min-w-0 flex-1">
@@ -131,10 +157,7 @@ const App = () => {
             <aside className="flex min-h-0 w-[32rem] shrink-0 flex-col gap-4 rounded-2xl bg-slate-900 p-6 ring-1 ring-slate-800">
               {phase === "ready" && (
                 <>
-                  <p className="text-2xl text-slate-300">
-                    Our AI will scan this dashcam frame for traffic signs, traffic lights, road markings, feeder
-                    pillars, bus stops and more.
-                  </p>
+                  <p className="text-2xl text-slate-300">{cfg.readyText}</p>
                   {error && <p className="text-xl text-red-400">{error}</p>}
                   <div className="mt-auto flex flex-col gap-4">
                     <button
@@ -152,7 +175,7 @@ const App = () => {
                         onClick={runDetection}
                         className="relative w-full rounded-2xl bg-cyan-400 py-6 text-4xl font-bold text-slate-950 transition active:scale-95"
                       >
-                        Detect assets
+                        Detect {cfg.noun[1]}
                       </button>
                     </div>
                   </div>
@@ -162,7 +185,7 @@ const App = () => {
               {phase === "scanning" && (
                 <div className="my-auto text-center">
                   <p className="font-mono text-3xl text-cyan-400">Scanning…</p>
-                  <p className="mt-3 text-xl text-slate-400">Looking for signs, lights and road markings</p>
+                  <p className="mt-3 text-xl text-slate-400">{cfg.scanText}</p>
                 </div>
               )}
 
@@ -170,7 +193,9 @@ const App = () => {
                 <>
                   <div className="flex items-baseline gap-3">
                     <p className="font-mono text-6xl font-bold text-cyan-400">{revealed.length}</p>
-                    <p className="text-2xl text-slate-300">road {detections.length === 1 ? "asset" : "assets"} found</p>
+                    <p className="text-2xl text-slate-300">
+                      road {detections.length === 1 ? cfg.noun[0] : cfg.noun[1]} found
+                    </p>
                   </div>
 
                   <ClassChips detections={revealed} activeGroups={activeGroups} onToggle={toggleGroup} />
@@ -191,7 +216,7 @@ const App = () => {
                       Scan again
                     </button>
                     <button
-                      onClick={reset}
+                      onClick={backToGrid}
                       className="rounded-2xl bg-cyan-400 py-3 text-xl font-bold text-slate-950 transition active:scale-95"
                     >
                       Try another
@@ -205,7 +230,7 @@ const App = () => {
       </main>
 
       {challengeOpen && image && (
-        <ChallengeModal image={image} ratio={ratio} onClose={() => setChallengeOpen(false)} />
+        <ChallengeModal image={image} ratio={ratio} kind={kind} onClose={() => setChallengeOpen(false)} />
       )}
     </div>
   );
