@@ -111,13 +111,49 @@ export async function detect(imageId, kind = "assets") {
     raw = mockRaw(imageId);
   } else {
     const res = await fetch(`${API_BASE}/api/detect/${kind}/${imageId}`, { method: "POST" });
-    if (!res.ok) throw new Error(`Detection failed (${res.status})`);
+    if (!res.ok) throw Object.assign(new Error(`Detection failed (${res.status})`), { status: res.status });
     raw = await res.json();
   }
 
   const detections = prepare(raw);
 
   // Keep the scan animation on screen for a minimum time so it never flashes by.
+  const remaining = MIN_SCAN_MS - (Date.now() - started);
+  if (remaining > 0) await sleep(remaining);
+  return detections;
+}
+
+// ---------- A visitor's own photo ----------
+// Sent as a data URL (the browser has already shrunk it). Always a live call on the server.
+// The result is remembered here so "Can you beat the AI?" doesn't pay for a second call.
+const uploadResults = new Map(); // "kind|dataUrl" -> detections
+
+// Forget uploaded photos' results (called when the visitor leaves the photo).
+export const clearUploads = () => uploadResults.clear();
+
+export async function detectUpload(dataUrl, kind = "assets") {
+  const started = Date.now();
+  const key = `${kind}|${dataUrl}`;
+  let detections = uploadResults.get(key);
+
+  if (!detections) {
+    let raw;
+    if (USE_MOCK) {
+      await sleep(800);
+      raw = mockRaw(`upload-${dataUrl.length}`);
+    } else {
+      const res = await fetch(`${API_BASE}/api/detect-upload/${kind}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: dataUrl }),
+      });
+      if (!res.ok) throw Object.assign(new Error(`Upload detection failed (${res.status})`), { status: res.status });
+      raw = await res.json();
+    }
+    detections = prepare(raw);
+    uploadResults.set(key, detections);
+  }
+
   const remaining = MIN_SCAN_MS - (Date.now() - started);
   if (remaining > 0) await sleep(remaining);
   return detections;

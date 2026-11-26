@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { IMAGES } from "./data/images";
 import { DEFECT_IMAGES } from "./data/defectImages";
-import { detect } from "./api";
+import { clearUploads, detect, detectUpload } from "./api";
 import { describe, IDLE_RESET_MS, MODES, REVEAL_STEP_MS } from "./constants";
 import { useIdleReset } from "./hooks/useIdleReset";
 import ModeSelect from "./components/ModeSelect";
@@ -11,6 +11,7 @@ import ClassChips from "./components/ClassChips";
 import DetectionList from "./components/DetectionList";
 import Spotlight from "./components/Spotlight";
 import ChallengeModal from "./components/ChallengeModal";
+import UploadBar from "./components/UploadBar";
 
 const FRAMES = { assets: IMAGES, defects: DEFECT_IMAGES };
 
@@ -27,6 +28,7 @@ const App = () => {
   const [selected, setSelected] = useState(null); // detection number (n) or null
   const [error, setError] = useState("");
   const [challengeOpen, setChallengeOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false); // the file dialog is open, so don't reset to Home
   const runId = useRef(0); // lets us ignore a detection that finishes after the visitor moved on
 
   const cfg = kind ? MODES[kind] : null;
@@ -50,6 +52,8 @@ const App = () => {
     setSelected(null);
     setError("");
     setChallengeOpen(false);
+    clearUploads(); // forget any uploaded photo's result
+    setPickerOpen(false);
   }, []);
 
   // Back to the two-button home screen. Also what the idle timer does.
@@ -58,7 +62,7 @@ const App = () => {
     setKind(null);
   }, [backToGrid]);
 
-  useIdleReset(kind !== null, IDLE_RESET_MS, goHome);
+  useIdleReset(kind !== null && !pickerOpen, IDLE_RESET_MS, goHome);
 
   const chooseKind = (k) => {
     backToGrid();
@@ -77,14 +81,20 @@ const App = () => {
     clearResults();
     setPhase("scanning");
     try {
-      const result = await detect(image.id, kind);
+      const result = image.upload ? await detectUpload(image.src, kind) : await detect(image.id, kind);
       if (myRun !== runId.current) return;
       setDetections(result);
       setActiveGroups(new Set(result.map((d) => describe(d).group)));
       setPhase("result");
     } catch (e) {
       if (myRun !== runId.current) return;
-      setError("Something went wrong. Please try again.");
+      setError(
+        e.status === 429
+          ? "Too many uploads right now. Please wait a minute and try again."
+          : e.status === 403
+          ? "Photo uploads are switched off at this booth."
+          : "Something went wrong. Please try again."
+      );
       setPhase("ready");
     }
   };
@@ -138,7 +148,16 @@ const App = () => {
         {kind === null ? (
           <ModeSelect onPick={chooseKind} />
         ) : onGrid ? (
-          <ImageGrid key={kind} images={FRAMES[kind]} onPick={pick} />
+          <div className="flex h-full flex-col">
+            <div className="min-h-0 flex-1">
+              <ImageGrid key={kind} images={FRAMES[kind]} onPick={pick} />
+            </div>
+            {/* Pinned under the grid so it stays visible on every page of frames. */}
+            <footer className="mt-6 flex items-center justify-between">
+              <UploadBar onPhoto={pick} onPickerOpen={setPickerOpen} />
+              {/* page dots and a "Next" arrow can go here later */}
+            </footer>
+          </div>
         ) : (
           <div className="flex h-full gap-8">
             <div className="min-h-0 min-w-0 flex-1">

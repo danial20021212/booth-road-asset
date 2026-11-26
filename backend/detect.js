@@ -70,6 +70,13 @@ const readCache = async (mode, id) => {
   }
 };
 
+// A visitor's own photo: always a live call, never saved, and not affected by CACHE_ONLY
+// (there is no saved result for a photo we have never seen).
+export async function detectBuffer(mode, buffer) {
+  const config = getMode(mode);
+  return config.run(buffer.toString("base64"), buffer);
+}
+
 const inflight = new Map(); // "mode:id" -> promise, so two taps on the same frame make one API call
 
 // Returns { detections, cached }. Uses the saved result unless `fresh` is true.

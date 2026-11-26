@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { detect } from "../api";
+import { detect, detectUpload } from "../api";
 import { describe } from "../constants";
 import { STATUS, categoriesFor, categoryOf, compare, itemInfo } from "../lib/compare";
 
@@ -120,7 +120,8 @@ const ChallengeModal = ({ image, ratio, kind = "assets", onClose }) => {
     }
     setBusy(true);
     try {
-      const detections = await detect(image.id, kind); // saved result, with the scan delay
+      // Sample frames use the saved result; an uploaded photo reuses the result from its first scan.
+      const detections = image.upload ? await detectUpload(image.src, kind) : await detect(image.id, kind);
       if (!alive.current) return;
       setAi(detections);
       setMode("compare");
