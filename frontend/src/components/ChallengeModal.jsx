@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { detect } from "../api";
+import { describe } from "../constants";
 import { STATUS, categoriesFor, categoryOf, compare, itemInfo } from "../lib/compare";
 
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
@@ -10,6 +11,38 @@ const boxStyle = (b) => ({
   width: pct(b.xmax - b.xmin),
   height: pct(b.ymax - b.ymin),
 });
+
+// Small label stuck to a box so it is obvious whose box it is: a solid AI pill or a dark YOU pill.
+// The number (matching the list on the right) rides on one tag per result.
+const Tag = ({ box, side, n, name, color, place }) => {
+  const isAi = side === "AI";
+  const pos =
+    place === "above"
+      ? { top: pct(box.ymin), transform: "translate(-50%, calc(-100% - 4px))" }
+      : place === "below"
+      ? { top: pct(box.ymax), transform: "translate(-50%, 4px)" }
+      : { top: pct(box.ymin), transform: "translate(-50%, 4px)" };
+  return (
+    <span
+      className="absolute flex cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-sm font-bold"
+      style={{
+        left: pct((box.xmin + box.xmax) / 2),
+        ...pos,
+        background: isAi ? color : "#020617",
+        color: isAi ? "#020617" : "#ffffff",
+        border: `2px solid ${color}`,
+      }}
+    >
+      {n != null && (
+        <span className={`rounded-full px-1.5 font-mono text-xs text-white ${isAi ? "bg-slate-950" : "bg-white/25"}`}>
+          {n}
+        </span>
+      )}
+      {isAi ? "AI" : "YOU"}
+      {name && <span className="font-medium">· {name}</span>}
+    </span>
+  );
+};
 
 // Smallest drag (as a fraction of the image) that counts as a box, so stray taps are ignored.
 const MIN_DRAG = 0.008;
@@ -25,6 +58,7 @@ const ChallengeModal = ({ image, ratio, kind = "assets", onClose }) => {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [selected, setSelected] = useState(null);
+  const [view, setView] = useState("both"); // "both" | "mine" | "ai"
 
   const layerRef = useRef(null);
   const nextId = useRef(1);
@@ -79,6 +113,7 @@ const ChallengeModal = ({ image, ratio, kind = "assets", onClose }) => {
   const runCompare = async () => {
     setError("");
     setSelected(null);
+    setView("both");
     if (ai) {
       setMode("compare");
       return;
@@ -183,13 +218,35 @@ const ChallengeModal = ({ image, ratio, kind = "assets", onClose }) => {
                 />
               )}
 
-              {/* Compare mode: solid = yours, dashed = the AI's, coloured by result */}
+              {/* Compare mode: legend, then solid = yours, dashed = the AI's, each with a YOU or AI tag */}
+              {result && (
+                <div className="pointer-events-none absolute right-4 top-4 z-30 flex gap-6 rounded-xl bg-slate-950/85 px-5 py-3 text-2xl font-bold text-white ring-1 ring-slate-600">
+                  <span className={`flex items-center gap-3 ${view === "ai" ? "opacity-30" : ""}`}>
+                    <span className="h-6 w-10 rounded-sm border-[3px] border-solid border-white" />
+                    You
+                  </span>
+                  <span className={`flex items-center gap-3 ${view === "mine" ? "opacity-30" : ""}`}>
+                    <span className="h-6 w-10 rounded-sm border-[3px] border-dashed border-white bg-white/20" />
+                    AI
+                  </span>
+                </div>
+              )}
+
               {result &&
                 result.items.map((it) => {
+                  const showAi = Boolean(it.ai) && view !== "mine";
+                  const showMe = Boolean(it.me) && view !== "ai";
+                  if (!showAi && !showMe) return null;
+
                   const color = STATUS[it.kind].color;
+                  // When the visitor picked the wrong type, each box keeps its own type colour
+                  // (their pick, and what the AI found) so the difference is visible.
+                  // Otherwise both boxes use the result colour.
+                  const wrong = it.kind === "wrong";
+                  const meColor = wrong ? categoryOf(it.me.group).color : color;
+                  const aiColor = wrong ? describe(it.ai).color : color;
                   const dim = selected !== null && selected !== it.key;
                   const on = selected === it.key;
-                  const badgeBox = (it.ai || it.me).box;
                   return (
                     <div
                       key={it.key}
@@ -199,35 +256,45 @@ const ChallengeModal = ({ image, ratio, kind = "assets", onClose }) => {
                       }}
                       className={`transition-opacity duration-200 ${dim ? "opacity-25" : "opacity-100"}`}
                     >
-                      {it.ai && (
-                        <div
-                          className="absolute cursor-pointer rounded-sm"
-                          style={{
-                            ...boxStyle(it.ai.box),
-                            border: `${on ? 4 : 2}px dashed ${color}`,
-                            background: `${color}1f`,
-                          }}
-                        />
+                      {showAi && (
+                        <>
+                          <div
+                            className="absolute cursor-pointer rounded-sm"
+                            style={{
+                              ...boxStyle(it.ai.box),
+                              border: `${on ? 4 : 2}px dashed ${aiColor}`,
+                              background: `${aiColor}1f`,
+                            }}
+                          />
+                          <Tag
+                            box={it.ai.box}
+                            side="AI"
+                            n={it.key}
+                            name={on ? describe(it.ai).name : null}
+                            color={aiColor}
+                            place={it.ai.box.ymin < 0.05 ? "inside" : "above"}
+                          />
+                        </>
                       )}
-                      {it.me && (
-                        <div
-                          className="absolute cursor-pointer rounded-sm"
-                          style={{
-                            ...boxStyle(it.me.box),
-                            border: `${on ? 4 : 3}px solid ${color}`,
-                          }}
-                        />
+                      {showMe && (
+                        <>
+                          <div
+                            className="absolute cursor-pointer rounded-sm"
+                            style={{
+                              ...boxStyle(it.me.box),
+                              border: `${on ? 4 : 3}px solid ${meColor}`,
+                            }}
+                          />
+                          <Tag
+                            box={it.me.box}
+                            side="YOU"
+                            n={showAi ? null : it.key}
+                            name={on ? categoryOf(it.me.group).name : null}
+                            color={meColor}
+                            place="below"
+                          />
+                        </>
                       )}
-                      <span
-                        className="absolute flex -translate-x-1/2 -translate-y-full items-center rounded-full px-2 py-0.5 font-mono text-sm font-bold text-slate-950"
-                        style={{
-                          left: pct((badgeBox.xmin + badgeBox.xmax) / 2),
-                          top: pct(badgeBox.ymin),
-                          background: color,
-                        }}
-                      >
-                        {it.key}
-                      </span>
                     </div>
                   );
                 })}
@@ -317,7 +384,27 @@ const ChallengeModal = ({ image, ratio, kind = "assets", onClose }) => {
                 </p>
               </div>
 
-              <p className="text-base text-slate-500">Solid box = yours · Dashed box = the AI's. Tap a row to find it.</p>
+              <div>
+                <p className="mb-2 text-base text-slate-500">Show on the image</p>
+                <div className="grid grid-cols-3 gap-2 rounded-2xl bg-slate-800 p-1.5">
+                  {[
+                    ["both", "Both"],
+                    ["mine", "Mine"],
+                    ["ai", "AI"],
+                  ].map(([k, label]) => (
+                    <button
+                      key={k}
+                      onClick={() => setView(k)}
+                      className={`rounded-xl py-2.5 text-xl font-semibold transition active:scale-95 ${
+                        view === k ? "bg-amber-400 text-slate-950" : "text-slate-300"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-base text-slate-500">Tap a row below to find it on the image.</p>
+              </div>
 
               <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
                 {result.items.map((it) => {
