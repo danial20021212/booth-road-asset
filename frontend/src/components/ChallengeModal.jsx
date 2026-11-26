@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { detect, detectUpload } from "../api";
 import { describe } from "../constants";
+import ExampleThumbs from "./ExampleThumbs";
 import { STATUS, categoriesFor, categoryOf, compare, itemInfo } from "../lib/compare";
 
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
@@ -310,6 +311,10 @@ const ChallengeModal = ({ image, ratio, kind = "assets", onClose }) => {
               <div>
                 <p className="text-2xl font-semibold text-white">1. Pick what you're boxing</p>
                 <p className="text-lg text-slate-400">2. Drag on the image to draw a box around it</p>
+                {/* The picked type's description. It sits here (not in each box) to leave room for the examples. */}
+                <p className="mt-2 text-lg font-semibold" style={{ color: brushCat.color }}>
+                  {brushCat.name}: <span className="font-normal text-slate-300">{brushCat.hint}</span>
+                </p>
               </div>
 
               <div className="grid min-h-0 flex-1 grid-cols-2 gap-2 overflow-y-auto pr-1">
@@ -328,7 +333,7 @@ const ChallengeModal = ({ image, ratio, kind = "assets", onClose }) => {
                         <span className="h-3.5 w-3.5 shrink-0 rounded-full" style={{ background: c.color }} />
                         {c.name}
                       </span>
-                      <span className="text-sm leading-tight text-slate-400">{c.hint}</span>
+                      <ExampleThumbs group={c.group} size={categories.length > 8 ? "h-12 w-12" : "h-14 w-14"} />
                     </button>
                   );
                 })}
