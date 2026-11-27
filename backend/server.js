@@ -8,7 +8,10 @@ const app = express();
 const PORT = process.env.PORT || 8000;
 
 app.set("trust proxy", true); // behind ngrok, so the visitor's real address is used for the upload limit
-app.use(cors()); // the frontend runs on a different address
+// CORS_ORIGIN lists the addresses allowed to use this server, separated by commas, for example
+// https://your-app.vercel.app,http://localhost:5173. If it isn't set, any address is allowed.
+const allowedOrigins = (process.env.CORS_ORIGIN || "").split(",").map((o) => o.trim().replace(/\/$/, "")).filter(Boolean);
+app.use(cors({ origin: allowedOrigins.length ? allowedOrigins : true }));
 
 app.get("/api/health", (req, res) => {
   res.json({

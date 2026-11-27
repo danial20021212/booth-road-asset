@@ -2,7 +2,12 @@ import { MIN_SCAN_MS, describe, groupRank } from "./constants";
 
 // Flip to false once the Express server is running.
 const USE_MOCK = false;
-const API_BASE = "http://localhost:8000";
+// On Vercel this comes from the VITE_API_BASE environment variable (your ngrok address).
+// Locally it falls back to the server on this computer.
+const API_BASE = (import.meta.env.VITE_API_BASE || "http://localhost:8000").replace(/\/$/, "");
+
+// ngrok's free plan shows a "Visit Site" warning page instead of the response unless this header is sent.
+const NGROK_SKIP = { "ngrok-skip-browser-warning": "1" };
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -110,7 +115,7 @@ export async function detect(imageId, kind = "assets") {
     await sleep(800);
     raw = mockRaw(imageId);
   } else {
-    const res = await fetch(`${API_BASE}/api/detect/${kind}/${imageId}`, { method: "POST" });
+    const res = await fetch(`${API_BASE}/api/detect/${kind}/${imageId}`, { method: "POST", headers: NGROK_SKIP });
     if (!res.ok) throw Object.assign(new Error(`Detection failed (${res.status})`), { status: res.status });
     raw = await res.json();
   }
@@ -144,7 +149,7 @@ export async function detectUpload(dataUrl, kind = "assets") {
     } else {
       const res = await fetch(`${API_BASE}/api/detect-upload/${kind}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...NGROK_SKIP },
         body: JSON.stringify({ image: dataUrl }),
       });
       if (!res.ok) throw Object.assign(new Error(`Upload detection failed (${res.status})`), { status: res.status });
