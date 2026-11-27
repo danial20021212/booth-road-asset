@@ -43,6 +43,33 @@ export const iou = (a, b) => {
 // Far-away signs are tiny, so two boxes count as the same object at a fairly low overlap.
 const MIN_IOU = 0.2;
 
+// A box drawn loosely around an object (or an AI box that is bigger than the visitor's) has a low
+// overlap score even though it clearly covers the same thing. So one box sitting (almost) entirely
+// inside the other also counts, as long as the outer box isn't absurdly bigger (a whole-image box).
+const MIN_COVER = 0.8;
+const MAX_SIZE_RATIO = 25;
+
+// 0 = not the same object. Otherwise how strong the match is. A close overlap always
+// ranks above a "one box inside the other" match.
+export function matchStrength(a, b) {
+  const w = Math.min(a.xmax, b.xmax) - Math.max(a.xmin, b.xmin);
+  const h = Math.min(a.ymax, b.ymax) - Math.max(a.ymin, b.ymin);
+  if (w <= 0 || h <= 0) return 0;
+
+  const inter = w * h;
+  const areaA = (a.xmax - a.xmin) * (a.ymax - a.ymin);
+  const areaB = (b.xmax - b.xmin) * (b.ymax - b.ymin);
+
+  const overlap = inter / (areaA + areaB - inter);
+  if (overlap >= MIN_IOU) return overlap;
+
+  const small = Math.min(areaA, areaB);
+  const big = Math.max(areaA, areaB);
+  const covered = inter / small;
+  if (covered >= MIN_COVER && big / small <= MAX_SIZE_RATIO) return 0.1 + 0.09 * covered; // always below MIN_IOU
+  return 0;
+}
+
 // Pairs each AI detection with at most one of the visitor's boxes (best overlap first,
 // preferring the same type), then labels everything: match / wrong / missed / extra.
 export function compare(aiDetections, mine) {
@@ -50,8 +77,8 @@ export function compare(aiDetections, mine) {
   aiDetections.forEach((ai, i) => {
     const aiGroup = describe(ai).group;
     mine.forEach((me, j) => {
-      const overlap = iou(ai.box, me.box);
-      if (overlap >= MIN_IOU) pairs.push({ i, j, score: overlap + (aiGroup === me.group ? 1 : 0) });
+      const strength = matchStrength(ai.box, me.box);
+      if (strength > 0) pairs.push({ i, j, score: strength + (aiGroup === me.group ? 1 : 0) });
     });
   });
   pairs.sort((a, b) => b.score - a.score);
